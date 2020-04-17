@@ -24,7 +24,7 @@ int get_ID(char *u){
   return (int)s->pw_uid;
 }
 void function4(){
-  fprintf(fp,"2, -1");
+  fprintf(fp,"2 -2");
 }
 void function3(){
   char proc[256];

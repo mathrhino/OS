@@ -27,7 +27,7 @@ int proc_uid_num = -1 ;
 
 
 asmlinkage int (*orig_sys_open)(const char __user * filename, int flags, umode_t mode) ;
-//asmlinkage long (*orig_sys_kill)(pid_t pid, int sig);
+asmlinkage long (*orig_sys_kill)(pid_t pid, int sig);
 
 asmlinkage int mousehole_sys_open(const char __user * filename, int flags, umode_t mode)
 {
@@ -47,7 +47,7 @@ asmlinkage int mousehole_sys_open(const char __user * filename, int flags, umode
 	}
 	return orig_sys_open(filename, flags, mode) ;
 }
-/*
+
 asmlinkage long mousehole_sys_kill(pid_t pid, int sig){
 	uid_t proc_id;
 	struct task_struct *t;
@@ -62,7 +62,7 @@ asmlinkage long mousehole_sys_kill(pid_t pid, int sig){
 	}
 	return orig_sys_kill(pid, sig);
 }
-*/
+
 
 static
 int mousehole_proc_open(struct inode *inode, struct file *file) {
@@ -141,13 +141,13 @@ int __init mousehole_init(void) {
 	sctable = (void *) kallsyms_lookup_name("sys_call_table") ;
 
 	orig_sys_open = sctable[__NR_open] ;
-//	orig_sys_kill = sctable[__NR_kill];
+	orig_sys_kill = sctable[__NR_kill];
 	pte = lookup_address((unsigned long) sctable, &level) ;
 	if (pte->pte &~ _PAGE_RW)
 		pte->pte |= _PAGE_RW ;
 
 	sctable[__NR_open] = mousehole_sys_open;
-//	sctable[__NR_kill] = mousehole_sys_kill;
+	sctable[__NR_kill] = mousehole_sys_kill;
 	printk("working init");
 	return 0;
 }
@@ -159,7 +159,7 @@ void __exit mousehole_exit(void) {
 	remove_proc_entry("mousehole", NULL) ;
 
 	sctable[__NR_open] = orig_sys_open;
-	//sctable[__NR_kill] = orig_sys_kill;
+	sctable[__NR_kill] = orig_sys_kill;
 	pte = lookup_address((unsigned long) sctable, &level) ;
 	pte->pte = pte->pte &~ _PAGE_RW ;
 	printk("Finish");
